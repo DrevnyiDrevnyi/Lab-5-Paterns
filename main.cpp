@@ -15,11 +15,68 @@ enum class UnitFaction: int
     Neutral
 };
 
+enum class LvlUp : int
+{
+    Opolchenec,
+    SkeletonArcher,
+    MasterGremlin,
+
+    None
+};
+
+class UpStrategy
+{
+public:
+    virtual ~UpStrategy() {}
+    virtual int GetSell () = 0;
+
+};
+
+class OpolchenecUp : public UpStrategy
+{
+    int GetSell() {cout << "Peasant can be up into Opolchenec";}
+};
+class ArcherUp : public UpStrategy
+{
+    int GetSell() {cout << "Skeleton can be up into Skeleton_Archer";}
+};
+class MasterUp : public UpStrategy
+{
+    int GetSell() {cout << "Gremlin can be up into Master_Gremlin ";}
+};
+
+UpStrategy *CreateUp (LvlUp typeUp)
+{
+    switch(typeUp)
+    {
+        case LvlUp::Opolchenec : return new OpolchenecUp;
+        case LvlUp::SkeletonArcher : return new ArcherUp;
+        case LvlUp::MasterGremlin : return new MasterUp;
+
+        default: return nullptr;
+    }
+}
+
 class Units
 {
 private:
     UnitFaction Faction;
     int Tier;
+
+    UpStrategy *UpManner;
+    void DoUp()
+    {
+        if (UpManner == nullptr)
+        {
+            cout<<"nothing";
+            return;
+        }
+        else
+        {
+            UpManner -> GetSell();
+        }
+    }
+
 protected:
     int Heal;
     int Sell;
@@ -29,14 +86,25 @@ public:
     {
         cout<< "Unit from your fraction is ready" << endl;
     }
-    virtual ~Units(){}
+    virtual ~Units(){if (UpManner != nullptr) delete UpManner; }
 
     virtual int GetHeal() {return Heal;}
-    virtual int GetSell() {return Sell;}
     virtual double GetDmg() {return Dmg;}
     UnitFaction GetFaction() const {return Faction;}
+    virtual void UnitName() = 0;
+    virtual int GetSell()
+    {
+        UnitName();
+        cout<< " : ";
+        DoUp();
+        cout<< " Sell: "<<Sell<<" HP: " <<Heal<< " Dmg: " << Dmg;
+
+        cout<<endl;
+    }
+    void SetUpManner(UpStrategy *upManner) { UpManner = upManner; }
 
 };
+
 
 class Gremlin : public Units
 {
@@ -44,113 +112,49 @@ private:
     int Proj;
 public:
     Gremlin();
-    ~Gremlin();
-    int GetHeal();
-    double GetDmg();
-    int GetSell();
-    int GetProj();
+    ~Gremlin(){}
+    int GetProj(){}
+    void UnitName() {cout<< "Gremlin";}
 };
 Gremlin ::Gremlin() : Units (UnitFaction ::Academy)
 {
+    SetUpManner (CreateUp (LvlUp::MasterGremlin));
     Dmg = rand()%2+1;
     Heal =rand()%5+1;
+    Sell = 22;
     cout <<"Gremlin is buy" << endl;
 }
-Gremlin ::~Gremlin()
-{
-    cout<< "Gremlin die" <<endl;
-}
 
-int Gremlin :: GetHeal()
-{
-    return Heal;
-}
-double Gremlin :: GetDmg()
-{
-    cout<<"Gremlin Dmg:"<<Dmg<<endl;
-    return Dmg;
-}
-
-int Gremlin :: GetProj()
-{
-    Proj = 5;
-    cout<<"Gremlin have projectile: " << Proj << endl;
-}
-int Gremlin :: GetSell()
-{
-    Sell = 22;
-    cout<<"Gremlin sell for: " << Sell<<" and " <<"Gremlin have HP: " << Heal <<endl;
-}
 class Peasant : public Units
 {
 public:
     Peasant();
-    ~Peasant();
-    double GetDmg();
-    int GetHeal();
-    int GetSell();
+    ~Peasant(){}
+    void UnitName() {cout<< "Peasant";}
 };
 Peasant ::Peasant() : Units (UnitFaction ::Orden)
 {
+    SetUpManner (CreateUp (LvlUp::Opolchenec));
     Dmg = 1.0;
     Heal = rand()%3+1;
-    cout <<"Peasant is buy" << endl;
-}
-Peasant ::~Peasant()
-{
-    cout<< "Peasant die" <<endl;
-}
-
-int Peasant :: GetSell()
-{
     Sell = 15;
-    cout<<"Peasant sell for: " << Sell << " and " << "Peasant have HP: " << Heal <<endl;
-}
-
-int Peasant :: GetHeal()
-{
-    return Heal;
-}
-double Peasant :: GetDmg()
-{
-    cout<<"Peasant Dmg:"<<Dmg<<endl;
-    return Dmg;
+    cout <<"Peasant is buy" << endl;
 }
 
 class Skeleton : public Units
 {
 public:
     Skeleton();
-    ~Skeleton();
-    int GetHeal();
-    int GetSell();
-    double GetDmg();
+    ~Skeleton(){}
+    void UnitName() {cout<< "Skeleton";}
 };
 Skeleton ::Skeleton() : Units (UnitFaction :: Necropolis)
 {
+    SetUpManner (CreateUp (LvlUp::SkeletonArcher));
     Dmg = 1.0;
+    Sell = 19;
     Heal = rand()%4+1;
     cout <<"Peasant became a Skeleton" << endl;
-}
-Skeleton ::~Skeleton()
-{
-    cout<< "Skeleton die... again" <<endl;
-}
-
-int Skeleton :: GetSell()
-{
-    Sell = 19;
-    cout<<"Skeleton sell for: " << Sell << " and " <<"Skeleton have HP: " << Heal <<endl;
-}
-
-int Skeleton :: GetHeal()
-{
-    return Heal;
-}
-double Skeleton :: GetDmg()
-{
-    cout<<"Skeleton Dmg:"<<Dmg<<endl;
-    return Dmg;
 }
 
 enum class UnitType : int
